@@ -16,7 +16,7 @@ APlayerCharacter::APlayerCharacter()
 
 	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
 	FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
-	// FirstPersonCameraComponent->SetRelativeLocation(FVector(0.f, 0.f, 64.f));
+	FirstPersonCameraComponent->SetRelativeLocation(FVector(0.f, 0.f, 64.f));
 	FirstPersonCameraComponent->bUsePawnControlRotation = true;
 
 }
@@ -48,6 +48,9 @@ void APlayerCharacter::BeginPlay()
 	}
 	Gun->AttachToComponent(GetFirstPersonCameraComponent(), FAttachmentTransformRules::KeepRelativeTransform);
 	Gun->SetOwner(this);
+
+	// TEMPORARY ----------------------------------------------------------------
+	Gun->GetMesh()->SetVisibility(false);
 	
 }
 
@@ -113,6 +116,11 @@ void APlayerCharacter::TogglePause(const FInputActionValue& Value)
 
 void APlayerCharacter::StartShoot(const FInputActionValue& Value)
 {
+	if (Gun	== nullptr)
+	{
+		return;
+	}
+	
 	bool val = Value.Get<bool>();
 
 	if (val == true)
@@ -126,6 +134,11 @@ void APlayerCharacter::StartShoot(const FInputActionValue& Value)
 
 void APlayerCharacter::EndShoot()
 {
+	if (Gun == nullptr)
+	{
+		return;
+	}
+
 	Gun->bTriggerReady = true;
 }
 

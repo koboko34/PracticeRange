@@ -14,4 +14,16 @@ class PRACTICERANGE_API APracticeRangeGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
 	
+public:
+	APracticeRangeGameModeBase();
+
+	void StartSession();
+
+protected:
+
+private:
+
+	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<class ATarget> TargetClass;
+
 };

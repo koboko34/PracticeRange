@@ -44,9 +44,9 @@ protected:
 	virtual void BeginPlay() override;
 
 public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
 
 	void ShootSemi(const FVector& Start, const FVector& CameraForwardVector);
+
+	UStaticMeshComponent* GetMesh() const { return Mesh; }
 
 };

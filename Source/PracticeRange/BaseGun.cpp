@@ -1,9 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+#include "DrawDebugHelpers.h"
 
 #include "BaseGun.h"
 #include "Components/StaticMeshComponent.h"
-#include "DrawDebugHelpers.h"
+#include "Kismet/GameplayStatics.h"
 #include "PlayerCharacter.h"
 
 // Sets default values
@@ -34,13 +35,6 @@ void ABaseGun::BeginPlay()
 	
 }
 
-// Called every frame
-void ABaseGun::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-
 void ABaseGun::ShootSemi(const FVector& Start, const FVector& CameraForwardVector)
 {
 	if (!bTriggerReady || !bShootReady)
@@ -55,15 +49,24 @@ void ABaseGun::ShootSemi(const FVector& Start, const FVector& CameraForwardVecto
 		UE_LOG(LogTemp, Error, TEXT("Gun has no owner!"));
 		return;
 	}
-	
-	UE_LOG(LogTemp, Warning, TEXT("Gun has owner, yay!"));
 
 	// put shoot logic here
 	// timer for bShootReady with FireInterval
 	FVector End = Start + (CameraForwardVector * Range);
 
-	DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 5);
+	FHitResult Hit;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+	Params.AddIgnoredActor(GetOwner());
+	GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_GameTraceChannel1, Params);
 
+	if (Hit.IsValidBlockingHit())
+	{
+		DrawDebugSphere(GetWorld(), Hit.ImpactPoint, 16, 8, FColor::Blue, false, 5);
+		UE_LOG(LogTemp, Warning, TEXT("Actor hit: %s"), *Hit.GetActor()->GetActorNameOrLabel());
+		UGameplayStatics::ApplyDamage(Hit.GetActor(), 1, MyOwner->GetController(), this, UDamageType::StaticClass());
+	}
+	
 	bTriggerReady = false;
 }
 
