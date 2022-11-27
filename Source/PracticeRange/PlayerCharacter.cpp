@@ -7,6 +7,10 @@
 #include "BaseGun.h"
 #include "Components/CapsuleComponent.h"
 #include "Camera/CameraComponent.h"
+#include "Blueprint/UserWidget.h"
+
+
+
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -31,7 +35,16 @@ void APlayerCharacter::BeginPlay()
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
 			Subsystem->AddMappingContext(MappingContext, 0);
+			UE_LOG(LogTemp, Warning, TEXT("Cast to subsystem succeeded"));
 		}
+		UE_LOG(LogTemp, Warning, TEXT("Cast to controller succeeded"));
+	}
+
+	if (HUDClass)
+	{
+		APlayerController* MyController = Cast<APlayerController>(Controller);
+		HUD = CreateWidget(MyController, HUDClass);
+		HUD->AddToViewport();
 	}
 
 	if (GunClass == nullptr)
@@ -51,6 +64,10 @@ void APlayerCharacter::BeginPlay()
 
 	// TEMPORARY ----------------------------------------------------------------
 	Gun->GetMesh()->SetVisibility(false);
+	if (Controller == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Controller is null"));
+	}
 	
 }
 
@@ -68,7 +85,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
 	{
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Move);
+		// EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Move);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Look);
 		
 		EnhancedInputComponent->BindAction(TogglePauseAction, ETriggerEvent::Started, this, &APlayerCharacter::TogglePause);

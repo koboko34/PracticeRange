@@ -49,4 +49,7 @@ public:
 
 	UStaticMeshComponent* GetMesh() const { return Mesh; }
 
+private:
+	class APracticeRangeGameModeBase* GameMode;
+
 };

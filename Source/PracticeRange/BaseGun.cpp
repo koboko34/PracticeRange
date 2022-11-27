@@ -1,11 +1,13 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "DrawDebugHelpers.h"
-
 #include "BaseGun.h"
 #include "Components/StaticMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "PlayerCharacter.h"
+#include "ShootTarget.h"
+#include "PracticeRangeGameModeBase.h"
+
+#include "DrawDebugHelpers.h"
 
 // Sets default values
 ABaseGun::ABaseGun()
@@ -32,6 +34,9 @@ ABaseGun::ABaseGun()
 void ABaseGun::BeginPlay()
 {
 	Super::BeginPlay();
+
+	GameMode = Cast<APracticeRangeGameModeBase>(UGameplayStatics::GetGameMode(this));
+
 	
 }
 
@@ -59,12 +64,21 @@ void ABaseGun::ShootSemi(const FVector& Start, const FVector& CameraForwardVecto
 	Params.AddIgnoredActor(this);
 	Params.AddIgnoredActor(GetOwner());
 	GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_GameTraceChannel1, Params);
+	GameMode->AddShot();
 
 	if (Hit.IsValidBlockingHit())
 	{
+		AShootTarget* HitTarget = Cast<AShootTarget>(Hit.GetActor());
+		if (HitTarget)
+		{
+			GameMode->AddHit();
+			GameMode->SpawnNext();
+		}
+		
 		DrawDebugSphere(GetWorld(), Hit.ImpactPoint, 16, 8, FColor::Blue, false, 5);
 		UE_LOG(LogTemp, Warning, TEXT("Actor hit: %s"), *Hit.GetActor()->GetActorNameOrLabel());
 		UGameplayStatics::ApplyDamage(Hit.GetActor(), 1, MyOwner->GetController(), this, UDamageType::StaticClass());
+
 	}
 	
 	bTriggerReady = false;
