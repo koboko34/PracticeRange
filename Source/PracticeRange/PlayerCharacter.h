@@ -26,6 +26,9 @@ class PRACTICERANGE_API APlayerCharacter : public ACharacter
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	class UInputAction* TogglePauseAction;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	class UInputAction* ToggleShowStatsAction;
 
 public:
 	// Sets default values for this character's properties
@@ -39,6 +42,7 @@ protected:
 	void Look(const FInputActionValue& Value);
 
 	void TogglePause(const FInputActionValue& Value);
+	void ToggleShowStats(const FInputActionValue& Value);
 
 	void StartShoot(const FInputActionValue& Value);
 	void EndShoot();
@@ -66,4 +70,6 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<ABaseGun> GunClass;
+
+	class APracticeRangeGameModeBase* GameMode;
 };

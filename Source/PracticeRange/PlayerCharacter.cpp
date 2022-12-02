@@ -8,9 +8,8 @@
 #include "Components/CapsuleComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Blueprint/UserWidget.h"
-
-
-
+#include "Kismet/GameplayStatics.h"
+#include "PracticeRangeGameModeBase.h"
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -22,7 +21,6 @@ APlayerCharacter::APlayerCharacter()
 	FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
 	FirstPersonCameraComponent->SetRelativeLocation(FVector(0.f, 0.f, 64.f));
 	FirstPersonCameraComponent->bUsePawnControlRotation = true;
-
 }
 
 // Called when the game starts or when spawned
@@ -35,9 +33,7 @@ void APlayerCharacter::BeginPlay()
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
 			Subsystem->AddMappingContext(MappingContext, 0);
-			UE_LOG(LogTemp, Warning, TEXT("Cast to subsystem succeeded"));
 		}
-		UE_LOG(LogTemp, Warning, TEXT("Cast to controller succeeded"));
 	}
 
 	if (HUDClass)
@@ -64,11 +60,18 @@ void APlayerCharacter::BeginPlay()
 
 	// TEMPORARY ----------------------------------------------------------------
 	Gun->GetMesh()->SetVisibility(false);
+	
 	if (Controller == nullptr)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Controller is null"));
+		return;
 	}
-	
+
+	GameMode = Cast<APracticeRangeGameModeBase>(UGameplayStatics::GetGameMode(this));
+	if (GameMode == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("GameMode is null on PlayerCharacter!"));
+	}
 }
 
 // Called every frame
@@ -89,6 +92,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Look);
 		
 		EnhancedInputComponent->BindAction(TogglePauseAction, ETriggerEvent::Started, this, &APlayerCharacter::TogglePause);
+		EnhancedInputComponent->BindAction(ToggleShowStatsAction, ETriggerEvent::Started, this, &APlayerCharacter::ToggleShowStats);
 
 		EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Triggered, this, &APlayerCharacter::StartShoot);
 		EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Completed, this, &APlayerCharacter::EndShoot);
@@ -106,7 +110,6 @@ void APlayerCharacter::Move(const FInputActionValue& Value)
 		AddMovementInput(GetActorForwardVector(), MoveVector.Y);
 		AddMovementInput(GetActorRightVector(), MoveVector.X);
 	}
-
 }
 
 void APlayerCharacter::Look(const FInputActionValue& Value)
@@ -120,7 +123,6 @@ void APlayerCharacter::Look(const FInputActionValue& Value)
 	}
 }
 
-
 void APlayerCharacter::TogglePause(const FInputActionValue& Value)
 {
 	bool val = Value.Get<bool>();
@@ -130,6 +132,10 @@ void APlayerCharacter::TogglePause(const FInputActionValue& Value)
 	}
 }
 
+void APlayerCharacter::ToggleShowStats(const FInputActionValue& Value)
+{
+	GameMode->SetShowStats(!GameMode->GetShowStats());
+}
 
 void APlayerCharacter::StartShoot(const FInputActionValue& Value)
 {

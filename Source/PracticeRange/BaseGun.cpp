@@ -55,7 +55,6 @@ void ABaseGun::ShootSemi(const FVector& Start, const FVector& CameraForwardVecto
 		return;
 	}
 
-	// put shoot logic here
 	// timer for bShootReady with FireInterval
 	FVector End = Start + (CameraForwardVector * Range);
 
@@ -74,11 +73,17 @@ void ABaseGun::ShootSemi(const FVector& Start, const FVector& CameraForwardVecto
 			GameMode->AddHit();
 			GameMode->SpawnNext();
 		}
+		else
+		{
+			GameMode->Miss();
+		}
 		
-		DrawDebugSphere(GetWorld(), Hit.ImpactPoint, 16, 8, FColor::Blue, false, 5);
-		UE_LOG(LogTemp, Warning, TEXT("Actor hit: %s"), *Hit.GetActor()->GetActorNameOrLabel());
+		DrawDebugSphere(GetWorld(), Hit.ImpactPoint, 16, 8, FColor::Blue, false, 2);
 		UGameplayStatics::ApplyDamage(Hit.GetActor(), 1, MyOwner->GetController(), this, UDamageType::StaticClass());
-
+	}
+	else
+	{
+		GameMode->Miss();
 	}
 	
 	bTriggerReady = false;

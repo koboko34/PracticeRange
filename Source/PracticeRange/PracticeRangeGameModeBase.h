@@ -22,11 +22,30 @@ public:
 	void SpawnNext();
 	void AddHit();
 	void AddShot();
+	void Miss();
 	void ResetAccuracy();
 	UFUNCTION(BlueprintPure)
-	float GetAccuracy() const;
+	float GetAccuracy();
+	UFUNCTION(BlueprintPure)
+	int GetShots() { return Shots; }
+	UFUNCTION(BlueprintPure)
+	int GetHits() { return Hits; }
+
+	UFUNCTION(BlueprintPure)
+	bool IsSessionTimerActive() const;
+	UFUNCTION(BlueprintPure)
+	float GetSessionTimeLeft() const;
+
+	void SetShowStats(bool bNewShowStats);
+	UFUNCTION(BlueprintPure)
+	bool GetShowStats() const;
+
+	float Accuracy = 100.f;
+	int Shots = 0;
+	int Hits = 0;
 
 protected:
+	virtual void BeginPlay();
 
 private:
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
@@ -41,8 +60,12 @@ private:
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
     float MinZ = 50.f, MaxZ = 750.f;
 
-	float Accuracy = 100.f;
-	int Shots;
-	int Hits;
+	FTimerHandle SessionHandle;
+	FTimerDelegate SessionEndDelegate;
 
+	bool bShowStats = false;
+	
+	void CompleteSession();
+	
+	void DestroyLastTarget();
 };
