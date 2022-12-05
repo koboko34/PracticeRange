@@ -37,6 +37,15 @@ void ABaseGun::BeginPlay()
 
 	GameMode = Cast<APracticeRangeGameModeBase>(UGameplayStatics::GetGameMode(this));
 
+	if (HitSound == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("HitSound not set!"));
+	}
+
+	if (ShotSound == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ShotSound not set!"));
+	}
 	
 }
 
@@ -64,6 +73,7 @@ void ABaseGun::ShootSemi(const FVector& Start, const FVector& CameraForwardVecto
 	Params.AddIgnoredActor(GetOwner());
 	GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_GameTraceChannel1, Params);
 	GameMode->AddShot();
+	UGameplayStatics::PlaySound2D(this, ShotSound);
 
 	if (Hit.IsValidBlockingHit())
 	{
@@ -71,6 +81,7 @@ void ABaseGun::ShootSemi(const FVector& Start, const FVector& CameraForwardVecto
 		if (HitTarget)
 		{
 			GameMode->AddHit();
+			UGameplayStatics::PlaySound2D(this, HitSound);
 			GameMode->SpawnNext();
 		}
 		else

@@ -22,11 +22,5 @@ public:
 	float MouseSens = 2.f;
 	UPROPERTY(EditAnywhere)
 	bool bInvertMouse = false;
-
-	// float GetMouseSens() { return MouseSens; }
-	// bool GetInvertMouse() { return bInvertMouse; }
-
-	// void SetMouseSens(float NewValue);
-	// void SetInvertMouse(bool NewValue);
 	
 };

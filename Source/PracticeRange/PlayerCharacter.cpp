@@ -156,12 +156,12 @@ void APlayerCharacter::Look(const FInputActionValue& Value)
 	{
 		if (bInvertMouse)
 		{
-			AddControllerYawInput(LookVector.X * MouseSens);
-			AddControllerPitchInput(-LookVector.Y * MouseSens);
+			AddControllerYawInput(LookVector.X * 0.1 * MouseSens);
+			AddControllerPitchInput(-LookVector.Y * 0.1* MouseSens);
 			return;
 		}
-		AddControllerYawInput(-LookVector.X * MouseSens);
-		AddControllerPitchInput(LookVector.Y * MouseSens);
+		AddControllerYawInput(-LookVector.X * 0.1 * MouseSens);
+		AddControllerPitchInput(LookVector.Y * 0.1 * MouseSens);
 	}
 }
 
@@ -200,14 +200,18 @@ void APlayerCharacter::TogglePause()
 	{
 		// Close pause menu and save settings
 		PauseUI->RemoveFromParent();
+		PlayerController->SetInputMode(FInputModeGameOnly::FInputModeGameOnly());
 		PlayerController->bShowMouseCursor = false;
 		bInMenu = !bInMenu;
 		SaveGame();
+		PlayerController->SetPause(false);
 		return;
 	}
 
 	// Open pause menu
+	PlayerController->SetPause(true);
 	PauseUI->AddToViewport(1);
+	PlayerController->SetInputMode(FInputModeGameAndUI::FInputModeGameAndUI());
 	PlayerController->bShowMouseCursor = true;
 	bInMenu = !bInMenu;
 	

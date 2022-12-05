@@ -3,6 +3,7 @@
 #include "PracticeRangeGameModeBase.h"
 #include "ShootTarget.h"
 #include "Math/UnrealMathUtility.h"
+#include "Kismet/GameplayStatics.h"
 
 
 APracticeRangeGameModeBase::APracticeRangeGameModeBase()
@@ -14,7 +15,16 @@ void APracticeRangeGameModeBase::BeginPlay()
 {
     Super::BeginPlay();
 
-    SessionEndDelegate = FTimerDelegate::CreateUObject(this, &ThisClass::CompleteSession);        
+    SessionEndDelegate = FTimerDelegate::CreateUObject(this, &ThisClass::CompleteSession);
+
+    if (StartPing == nullptr)
+    {
+        UE_LOG(LogTemp, Error, TEXT("StartPing is not set!"));
+    }
+    if (EndSiren == nullptr)
+    {
+        UE_LOG(LogTemp, Error, TEXT("EndSiren is not set!"));
+    }       
 }
 
 void APracticeRangeGameModeBase::StartSession()
@@ -30,6 +40,7 @@ void APracticeRangeGameModeBase::StartSession()
     ResetAccuracy();
     GetWorldTimerManager().ClearTimer(SessionHandle);
     GetWorldTimerManager().SetTimer(SessionHandle, SessionEndDelegate, 30, false);
+    UGameplayStatics::PlaySound2D(this, StartPing);
     SpawnNext();
 
 }
@@ -38,6 +49,7 @@ void APracticeRangeGameModeBase::CompleteSession()
 {
     DestroyLastTarget();
     SetShowStats(true);
+    UGameplayStatics::PlaySound2D(this, EndSiren);
 }
 
 

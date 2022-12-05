@@ -52,4 +52,9 @@ public:
 private:
 	class APracticeRangeGameModeBase* GameMode;
 
+	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
+	class USoundBase* ShotSound;
+	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
+	class USoundBase* HitSound;
+
 };

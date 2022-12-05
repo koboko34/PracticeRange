@@ -68,4 +68,10 @@ private:
 	void CompleteSession();
 	
 	void DestroyLastTarget();
+
+	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
+	class USoundBase* StartPing;
+	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
+	class USoundBase* EndSiren;
+
 };
