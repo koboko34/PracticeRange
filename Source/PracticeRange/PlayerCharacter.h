@@ -30,6 +30,9 @@ class PRACTICERANGE_API APlayerCharacter : public ACharacter
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	class UInputAction* ToggleShowStatsAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	class UInputAction* LookAction;
+
 public:
 	// Sets default values for this character's properties
 	APlayerCharacter();
@@ -41,35 +44,56 @@ protected:
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 
-	void TogglePause(const FInputActionValue& Value);
 	void ToggleShowStats(const FInputActionValue& Value);
 
 	void StartShoot(const FInputActionValue& Value);
 	void EndShoot();
 
 public:	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	class UInputAction* LookAction;
-	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
-	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<class UUserWidget> HUDClass;
-
-	UPROPERTY()
-	UUserWidget* HUD;
 
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 
-private:
-	class ABaseGun* Gun;
+	UFUNCTION(BlueprintPure)
+	float GetMouseSens() const { return MouseSens; }
+	UFUNCTION(BlueprintCallable)
+	void SetMouseSens(float NewValue);
+	UFUNCTION(BlueprintPure)
+	bool GetInvertMouse() const { return bInvertMouse; }
+	UFUNCTION(BlueprintCallable)
+	void SetInvertMouse(bool NewValue);
+	UFUNCTION(BlueprintCallable)
+	void SaveGame();
+	UFUNCTION(BlueprintCallable)
+	void TogglePause();
 
+
+private:
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class UUserWidget> HUDClass;
+	UPROPERTY()
+	UUserWidget* HUD;
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class UUserWidget> PauseMenuClass;
+	UPROPERTY()
+	UUserWidget* PauseUI;
+	bool bInMenu = false;
+
+	class APlayerController* PlayerController;
+
+	class ABaseGun* Gun;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<ABaseGun> GunClass;
 
 	class APracticeRangeGameModeBase* GameMode;
+
+	const FString MouseSlot = "MouseSlot";
+	UPROPERTY(EditAnywhere)
+	float MouseSens;
+	UPROPERTY(EditAnywhere)
+	bool bInvertMouse;
+
+private:
+	void LoadGame();
+
 };

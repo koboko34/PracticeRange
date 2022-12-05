@@ -10,17 +10,22 @@
 #include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "PracticeRangeGameModeBase.h"
+#include "MySaveGame.h"
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bStartWithTickEnabled = false;
 
 	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
 	FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
 	FirstPersonCameraComponent->SetRelativeLocation(FVector(0.f, 0.f, 64.f));
 	FirstPersonCameraComponent->bUsePawnControlRotation = true;
+
+	MouseSens = 1.f;
+	bInvertMouse = false;
 }
 
 // Called when the game starts or when spawned
@@ -28,7 +33,9 @@ void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
+	PlayerController = Cast<APlayerController>(Controller);
+
+	if (PlayerController != nullptr)
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
@@ -36,12 +43,20 @@ void APlayerCharacter::BeginPlay()
 		}
 	}
 
-	if (HUDClass)
+	if (HUDClass == nullptr)
 	{
-		APlayerController* MyController = Cast<APlayerController>(Controller);
-		HUD = CreateWidget(MyController, HUDClass);
-		HUD->AddToViewport();
+		UE_LOG(LogTemp, Error, TEXT("HUDClass is not set!"));
+		return;
 	}
+	HUD = CreateWidget(PlayerController, HUDClass);
+	HUD->AddToViewport();
+	
+	if (PauseMenuClass == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("HUDClass is not set!"));
+		return;
+	}	
+	PauseUI = CreateWidget(PlayerController, PauseMenuClass);
 
 	if (GunClass == nullptr)
 	{
@@ -71,17 +86,33 @@ void APlayerCharacter::BeginPlay()
 	if (GameMode == nullptr)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("GameMode is null on PlayerCharacter!"));
+		return;
+	}
+
+	if (UGameplayStatics::DoesSaveGameExist(MouseSlot, 0))
+	{
+		LoadGame();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No game save found. Creating new game save..."));
+		SaveGame();
 	}
 }
 
-// Called every frame
-void APlayerCharacter::Tick(float DeltaTime)
+void APlayerCharacter::LoadGame()
 {
-	Super::Tick(DeltaTime);
-
+	if (UGameplayStatics::DoesSaveGameExist(MouseSlot, 0))
+	{
+		UMySaveGame* SaveGameInstance = Cast<UMySaveGame>(UGameplayStatics::LoadGameFromSlot(MouseSlot, 0));
+		SetMouseSens(SaveGameInstance->MouseSens);
+		SetInvertMouse(SaveGameInstance->bInvertMouse);
+		UE_LOG(LogTemp, Warning, TEXT("Loading complete."));
+		return;
+	}
+	UE_LOG(LogTemp, Error, TEXT("Save game does not exist!"));
 }
 
-// Called to bind functionality to input
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -114,22 +145,72 @@ void APlayerCharacter::Move(const FInputActionValue& Value)
 
 void APlayerCharacter::Look(const FInputActionValue& Value)
 {
+	if (bInMenu)
+	{
+		return;
+	}
+	
 	FVector2D LookVector = Value.Get<FVector2D>();
 
 	if (Controller != nullptr)
 	{
-		AddControllerYawInput(-LookVector.X);
-		AddControllerPitchInput(LookVector.Y);
+		if (bInvertMouse)
+		{
+			AddControllerYawInput(LookVector.X * MouseSens);
+			AddControllerPitchInput(-LookVector.Y * MouseSens);
+			return;
+		}
+		AddControllerYawInput(-LookVector.X * MouseSens);
+		AddControllerPitchInput(LookVector.Y * MouseSens);
 	}
 }
 
-void APlayerCharacter::TogglePause(const FInputActionValue& Value)
+void APlayerCharacter::SetInvertMouse(bool NewValue)
 {
-	bool val = Value.Get<bool>();
-	if (val == true)
+	bInvertMouse = NewValue;
+}
+
+void APlayerCharacter::SetMouseSens(float NewValue)
+{
+	MouseSens = NewValue;
+}
+
+void APlayerCharacter::SaveGame()
+{
+	if (UGameplayStatics::DoesSaveGameExist(MouseSlot, 0))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("TooglePause() called"));
+		UMySaveGame* SaveGameInstance = Cast<UMySaveGame>(UGameplayStatics::LoadGameFromSlot(MouseSlot, 0));
+		SaveGameInstance->MouseSens = GetMouseSens();
+		SaveGameInstance->bInvertMouse = GetInvertMouse();
+		UGameplayStatics::SaveGameToSlot(SaveGameInstance, MouseSlot, 0);
 	}
+	else
+	{
+		UMySaveGame* SaveGameInstance = Cast<UMySaveGame>(UGameplayStatics::CreateSaveGameObject(UMySaveGame::StaticClass()));
+		SaveGameInstance->MouseSens = GetMouseSens();
+		SaveGameInstance->bInvertMouse = GetInvertMouse();
+		UGameplayStatics::SaveGameToSlot(SaveGameInstance, MouseSlot, 0);	
+	}
+	UE_LOG(LogTemp, Warning, TEXT("Save complete."));
+}
+
+void APlayerCharacter::TogglePause()
+{
+	if (bInMenu)
+	{
+		// Close pause menu and save settings
+		PauseUI->RemoveFromParent();
+		PlayerController->bShowMouseCursor = false;
+		bInMenu = !bInMenu;
+		SaveGame();
+		return;
+	}
+
+	// Open pause menu
+	PauseUI->AddToViewport(1);
+	PlayerController->bShowMouseCursor = true;
+	bInMenu = !bInMenu;
+	
 }
 
 void APlayerCharacter::ToggleShowStats(const FInputActionValue& Value)
